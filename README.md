@@ -1,110 +1,68 @@
-## Introduction
+# Multi-Source ETL Pipeline: Twitter Data Ingestion & Transformation
 
-Data comes from variety of sources and in different formats. The qualitative and quantitative nature of data also varies. Whereas the quantity of data maybe insignificant, good quality data is vital for making analysis and visualizations for any organizational decision.
+1. Project Overview
 
-This project deals with data wrangling using python libraries. Data wrangling is the process of gathering real data, assessing its quality and tidiness, and then cleaning it. In every step of wrangling, detailed documentations have been made in this project.
+This project demonstrates a robust Data Engineering pipeline designed to ingest, transform, and store fragmented data from three distinct sources: live API streams, cloud-hosted files, and archival datasets. The core objective was to wrangle the Twitter account data of @dog_rates (WeRateDogs) to create a high-integrity "Gold" dataset for trustworthy analysis and visualization.
 
-The data set for this project is tweet archive of Twitter user @dog_rates (WeRateDogs). According to Udacity, WeRateDogs is a Twitter account that rates people's dogs with a humorous comment about the dog. The ratings have Waterdogs constant denominator of 10 but have varying unique numerator. For instance, 12/10, 13/10, etc. WeRateDogs has over 4 million followers. However, this tweet archive data only contains basic tweet data on tweet ID, timestamp, text among others for over 5000 tweets. In addition, more data must be gathered to meet the objective of the project
+2. Technical Stack & Software Requirements
 
-## Project Motivation
+- Language: Python
 
-The object of this project is to wrangle WeRateDogs Twitter data to create interesting and trustworthy analyses and visualizations. The Twitter archive only contains very basic tweet information, and additional gathering, then assessing and cleaning is required for a worthy analyses and visualizations.
+- Data Ingestion: Tweepy (REST API), Requests (Cloud HTTP Ingestion)
 
-## What Software Do I Need?
+- Transformation: Pandas, NumPy, Regular Expressions (RegEx), JSON
 
-- pandas
-- NumPy
-- requests
-- tweepy
-- json
-- matplotlib
+- Visualization: Matplotlib, Seaborn
 
-## Project Steps Overview
+3. Data Pipeline Architecture (ETL)
 
-1. Gathering data
-2. Assessing data
-3. Cleaning data
-4. Storing data
-5. Analyzing, and visualizing data
-6. Reporting
+The pipeline manages three unique data streams, each requiring a different ingestion strategy:
 
-## The Data
+- Stream A (Archival - Extract): Manual ingestion of the twitter_archive_enhanced.csv provided by Udacity, containing basic metadata for 5,000+ tweets.
 
-There are three different types of data for this project, each with different data format.
+- Stream B (Cloud - Ingest): Programmatic ingestion of the image-predictions.tsv file hosted on Udacity’s servers via the Requests library.
 
-**a) Enhanced Twitter Archive**
+- Stream C (Live API - Query): Dynamic extraction of missing data (retweet/favorite counts) using Tweepy to query the Twitter API. Raw responses were serialized into a tweet_json.txt file before parsing.
 
-The WeRateDogs Twitter archive contains basic tweet data for all 5000+ of their tweets, but not everything. 
+4. Data Quality & Wrangling Framework
 
-**b) Additional Data via the Twitter API**
+Following the MSc Data Engineering standard, this project follows a strict "Assess-Clean-Test" workflow. Detailed documentation was maintained at every step to ensure transparency.
 
-The additional data to be gathered and contains retweet count and favorite count, which are the two of the notable column missing from the twitter archive data. The data is queried using tweepy, which ias a Twitter's API to gather this valuable data.
+## Assessment Dimensions
 
-**c) Image Predictions File**
+Both Visual (Excel-based) and Programmatic (Pandas-based) assessments were conducted to identify issues across:
 
-The file contains tweet ID, image URL, and the image number that corresponded to the most confident prediction (numbered 1 to 4 since tweets can have up to four images)
+- Quality: Completeness, Validity, Accuracy, and Consistency (e.g., incorrect data types, invalid names).
 
-## Gathering Data
+- Tidiness: Structural issues where variables did not form clear columns (e.g., dog stages spread across four columns).
 
-There were three different types of data in this project. First, is twitter_archive_enhanced.csv. According to Udacity, WeRateDogs downloaded their Twitter archive and sent it to Udacity via email exclusively for you to use in this project. This data is manually downloaded via the link provided by Udacity and then uploaded in the working directory.
+Key Engineering Challenges Resolved:
 
-The second data is image_predictions.tsv. This dataset is also known as WeRateDogs tweet image predictions and is hosted on Udacity’s servers. It is downloaded programmatically using requests library [here]('https://d17h27t6h515a5.cloudfront.net/topher/2017/August/599fd2ad_image-predictions/image-predictions.tsv').Using the tweet IDs in the WeRateDogs Twitter archive, I query the Twitter API for each tweet's JSON data using Python's Tweepy library and store each tweet's entire set of JSON data in a file called tweet_json.txt file
+- API Rate Limiting: Built a robust wrapper to handle the query of thousands of unique Tweet IDs via the Twitter API.
 
-Lastly, is tweet_json.txt. There were two methods of getting this additional data. Either, through Twitter API and the python tweepy library or direct download of the json.txt file provided in the Udacity classroom. I queried the data using tweepy API
+- JSON Normalization: Flattened nested JSON structures into a relational tabular format.
 
-## Assessing the data
+- Advanced Pattern Matching: Developed RegEx patterns to extract correct dog_name and dog_stage information from unstructured tweet text.
 
-Both visual and progmmatic methods were used to assess quality and tidiness issues.
+- Schema Denormalization: Merged three disparate data formats into a single, high-integrity twitter_archive_master.csv.
 
-**Quality issues:** Issues related to the data content (dirty data). We check for four quality dimensions, completeness, validity, accuracy and consistency.
+5. System Insights & Findings
 
-**Tidiness issues:** Issues related to the data structure (messy data). We check whether or not each variable forms a column, each observation forms a row or each type of observational unit forms a table
+- Infrastructure Efficiency: Successfully synchronized metadata across the dataset after filtering for valid image URLs and removing retweets.
 
-Through **visual Assessment**, where the data sets were first converted to csv and then opened in an excel workbook, I was able to quickly identify issues as non-descriptive column headers, extraneous columns, missing values (NaN, none), inconsistent rating denominator as well as tidiness issues for dog stage (doggo, floofer, pupper,puppo) in the three Datasets.
+- Core Trends: Identified "Golden Retriever" as the most frequent breed (139 dogs), followed by "Labrador Retriever" (95 dogs).
 
-In **programmatic Assessment**, I loaded the data sets into pandas data frame in Jupyter notebook and I identified most of the quality issues including incorrect data types, invalid names under name column (a, an, none) and duplicate values existing in the three datasets. The python methods used comprise .info(), .head(), .describe(), .dtypes, .nunique(), .value_counts() and .columns among others. For instance, inaccurate values in twitter_archive data for name column was one of the quality issues identified while the four columns for doggo, floofer, pupper, and puppo were considered dog stage, one variable as a tidiness issue.
+- Dog Stages: "Pupper" emerged as the most popular stage by count, while "Doggo" ranked second based on retweet and favorite metrics.
 
-## Cleaning the Data
+- Statistical Correlation: Observed a strong linear relationship between Favorite counts and Retweet counts across all stages.
 
-The aim here is to improve quality and tidiness of the data based on the assessment made. In cleaning the data, I used pogrammatic data cleaning process, in which every issue identified in the assessment section is first defined followed by coding and and finally testing. However, copies of the original dataset were made before the issues were cleaned. The three data sets had a lot of unique issues, and at times I had to split the data and clean a particular quality issue and then merge them again. Writing a regex pattern helped in indentifying the correct dog_name and dog_stage.
+6. Limitations & Future Scope
 
-## Storing the Data
+- Extraction Accuracy: Despite RegEx implementation, some edge-case naming conventions in the text column may remain unextracted.
 
-After cleaning the data, the merged data was stored as twitter_archive_master.csv file into the working directory
+- Data Completeness: The analysis was limited to tweets with valid image URLs; further transformation could include rating-to-tweet correlations.
 
-## Analyzing the Data
+- Pipeline Scalability: Future iterations will migrate this local ETL workflow into a cloud-native environment (e.g., Airflow or AWS Lambda) for scheduled ingestion.
 
-Using twitter_archive_master.csv file, three insights were analyzed and visualizations made for each case. One of the insights is that Golden Retriever is the most popular dog breed amongst WeRateDogs’s tweets in terms of the number of image predictions having 139 dogs.
 
-## Insights
-
-1. Pupper dog stage is the most popular dog stage amongst WeRateDogs’s tweets, favorite and retweets counts. The second, most popular dog stage based on the retweets and favorite counts is doggo.
-
-2. There is strong linear relationship between the Favourites count and the Retweet, though most of the data is accumulated at the start. This relationship is the same in every dog stage. Also, the distribution for p1, p2 and p3 is really skewed
-
-3. Golden Retriever is the most popular dog breed amongst WeRateDogs’s tweets in terms of the number of image predictions having 139 dogs. The second most popular dog breed is Labrador Retriever also having 95 dogs. Therefore, golden retriever, labrador retriever, pembroke, Chihuahua and pug make top 5 most popular dog breeds
-
-![image](https://user-images.githubusercontent.com/7541585/193414221-2288a8ea-1699-450c-9eef-2f4cc3a1f938.png)
-![image](https://user-images.githubusercontent.com/7541585/193414407-75f2fdbc-5b6a-4663-ab90-a486fa71295d.png)
-![image](https://user-images.githubusercontent.com/7541585/193414417-47008729-250a-47a8-a64a-b5cbd9fe52f5.png)
-![image](https://user-images.githubusercontent.com/7541585/193414443-47c61010-8556-4312-97c4-187f32455b88.png)
-![image](image.png)
-![dis_image](python.jpg)
-
-## Limitations
-
-The project identified only three insights. First, the most popular dog stage in terms of retweets and favorite counts. The most popular dog breed as well as their distributions.
-
-It would be of interest to consider the correlation between the tweets and the ratings, which would involve further transformation of data. Another limitation is that, the data had a lot of missing values but I only consider situations where there is valid image url
-
-During cleaning process, there were several invalid dog names, and even after creating regex pattern to extract the correct dog names, there is likelihood that some names still remain unextracted from the text column. This still require further investigation so as extract and correct all the names
-
-## Conclusion
-
-This project was majorly dealing with data wrangling process. There were three different types of data from different sources and formats. First, we have WeRateDogs twitter archive data in a csv format, second is Tweet image prediction in .tsv format and the last dataset is WeRateDogs twitter account additional data tweet to be stored as tweet_json.txt file
-
-All the wrangling efforts are documented at every section.
-
-The major findings of this analysis are that Pupper dog stage is the most popular dog stage amongst WeRateDogs’s tweets, favorite and retweets counts. The second, most popular dog stage based on the retweets and favorite counts is doggo. Whereas I was able to show that there is a correlation between the Favourites count and the Retweet, I have to indicate that most of the data accumulated at the start of the graph, which might skewness.
-
-lastly, Golden Retriever is the most popular dog breed amongst WeRateDogs’s tweets in terms of the number of image predictions having 139 dogs. Others making top five include labrador retriever, pembroke, Chihuahua and pug.
+This project was completed as part of the Udacity Data Analyst Nanodegree, focusing on the end-to-end data wrangling process.
